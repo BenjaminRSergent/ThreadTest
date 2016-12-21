@@ -5,30 +5,24 @@ using System.Threading;
 using UnityEngine.UI;
 
 public class CountOnThread : MonoBehaviour {
-	Thread countThread;
-	Text text;
-	bool done = false;
+	public bool useNative = true;
+	private Text _text;
+
+	Dispatcher.Callback cntCallback;
+
 	// Use this for initialization
 	void Start () {
-		text = GetComponent<Text> ();
-		countThread = new Thread (new ThreadStart (ThreadLoop));
-		countThread.Start ();
+		_text = GetComponent<Text> ();
+		cntCallback = new Dispatcher.Callback(ShowCount);
+		NativeWrapper.StartThread (cntCallback);
 	}
 
 	void OnDestroy() {
-		done = true;
+		NativeWrapper.StopThread ();
 	}
 
-	void ThreadLoop() {
-		int cnt = 0;
-		while(!done) {
-			cnt++;
-			Dispatcher.Instance.dispatch(() => text.text = "" + cnt);
-
-			Thread.Sleep (500);
-			Debug.Log ("Cnt is " + cnt);
-		}
-
+	void ShowCount(int cnt) {
+		Debug.Log ("Got native callback with " + cnt);
+		Dispatcher.Instance.dispatch(() => _text.text = "" + cnt);		
 	}
-
 }

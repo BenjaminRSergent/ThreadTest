@@ -8,7 +8,9 @@ public class Dispatcher : MonoBehaviour {
 			return _instance;
 		}
 	}
-		
+
+	public delegate void Callback(int num); 
+
 	static private Dispatcher _instance;
 	private List<System.Action> _workList;
 
@@ -19,14 +21,21 @@ public class Dispatcher : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
-		foreach(System.Action work in _workList) {
+		List<System.Action> workListCpy;
+		lock (_workList) {
+			workListCpy = new List<System.Action> (_workList);
+			_workList.Clear ();
+		}
+
+		foreach(System.Action work in workListCpy) {
 			work ();
 		}
 
-		_workList.Clear ();
 	}
 
 	public void dispatch(System.Action work) {
-		_workList.Add (work);
+		lock (_workList) {
+			_workList.Add (work);
+		}
 	}
 }
